@@ -1,56 +1,52 @@
-import time
+import os
+
+from benchmarks import run_all
 
 
-def check_gpu():
+def get_device(torch) -> str:
+    if torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
+def total_memory_gb() -> float:
+    # Apple Silicon uses unified memory: the GPU shares system RAM
+    return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 1e9
+
+
+def print_device_info(torch, device: str) -> None:
+    print("=== GPU Check ===\n")
+    print(f"PyTorch version: {torch.__version__}")
+    print(f"MPS available: {torch.backends.mps.is_available()}")
+    print(f"Device: {device}")
+
+    if device == "mps":
+        print("GPU: Apple Silicon (Metal / MPS)")
+        print(f"Unified memory: {total_memory_gb():.1f} GB")
+
+
+def print_model_size_estimate() -> None:
+    params_billions = total_memory_gb() / 2  # fp16 = 2 bytes per parameter
+    print(f"\nEstimated max model size (fp16, unified memory, upper bound; OS needs RAM too): ~{params_billions:.0f}B parameters")
+
+
+def check_gpu() -> None:
     try:
         import torch
     except ImportError:
         print("PyTorch not installed. Run: pip install torch")
         return
 
-    print("=== GPU Check ===\n")
-    print(f"PyTorch version: {torch.__version__}")
-    print(f"CUDA available: {torch.cuda.is_available()}")
+    device = get_device(torch)
+    print_device_info(torch, device)
 
-    if not torch.cuda.is_available():
+    if device == "cpu":
         print("\nNo GPU detected. That's fine for most lessons.")
         print("For GPU-heavy lessons, use Google Colab (free).")
         return
 
-    print(f"CUDA version: {torch.version.cuda}")
-    print(f"GPU: {torch.cuda.get_device_name(0)}")
-
-    props = torch.cuda.get_device_properties(0)
-    print(f"Memory: {props.total_memory / 1e9:.1f} GB")
-    print(f"Compute capability: {props.major}.{props.minor}")
-
-    print("\n=== CPU vs GPU Benchmark ===\n")
-    size = 4000
-
-    a = torch.randn(size, size)
-    b = torch.randn(size, size)
-
-    start = time.time()
-    _ = a @ b
-    cpu_time = time.time() - start
-    print(f"CPU matrix multiply ({size}x{size}): {cpu_time:.3f}s")
-
-    a_gpu = a.to("cuda")
-    b_gpu = b.to("cuda")
-    torch.cuda.synchronize()
-
-    start = time.time()
-    _ = a_gpu @ b_gpu
-    torch.cuda.synchronize()
-    gpu_time = time.time() - start
-    print(f"GPU matrix multiply ({size}x{size}): {gpu_time:.3f}s")
-    print(f"Speedup: {cpu_time / gpu_time:.0f}x")
-
-    vram_gb = props.total_memory / 1e9
-    params_fp16 = vram_gb * 1e9 / 2
-    params_billions = params_fp16 / 1e9
-    print(f"\nEstimated max model size (fp16): ~{params_billions:.0f}B parameters")
+    run_all(device)
+    print_model_size_estimate()
 
 
-if __name__ == "__main__":
-    check_gpu()
+check_gpu()

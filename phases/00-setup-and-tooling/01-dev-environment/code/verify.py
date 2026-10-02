@@ -254,42 +254,37 @@ def print_probe(key: str, required: bool) -> bool:
     return result.ok
 
 
-def main() -> int:
-    args = parse_args()
-    route = ROUTES[args.route]
 
-    print("\n=== AI Engineering from Scratch: Environment Check ===\n")
-    print(f"Route: {route.label} (`--route {args.route}`)\n")
+args = parse_args()
+route = ROUTES[args.route]
 
-    passed = 0
-    for key in route.required:
-        passed += int(print_probe(key, required=True))
+print("\n=== AI Engineering from Scratch: Environment Check ===\n")
+print(f"Route: {route.label} (`--route {args.route}`)\n")
 
-    if route.optional and args.show_later:
-        print("\nOptional or needed later:")
-        for key in route.optional:
-            print_probe(key, required=False)
-    elif route.optional:
-        print(
-            f"\nLater checks skipped: {len(route.optional)} tools are not needed to start. "
-            "Add `--show-later` when you want to inspect them."
-        )
+passed = 0
+for key in route.required:
+    passed += int(print_probe(key, required=True))
 
-    if route.manual:
-        print("\nManual checks:")
-        for item in route.manual:
-            print(f"  [MANUAL] {item}")
+if route.optional and args.show_later:
+    print("\nOptional or needed later:")
+    for key in route.optional:
+        print_probe(key, required=False)
+elif route.optional:
+    print(
+        f"\nLater checks skipped: {len(route.optional)} tools are not needed to start. "
+        "Add `--show-later` when you want to inspect them."
+    )
 
-    total = len(route.required)
-    print(f"\nResult: {passed}/{total} required checks passed")
-    if passed == total:
-        print(f"Ready to start {route.label}.")
-        print(f"Next: {route.next_command}\n")
-        return 0
+if route.manual:
+    print("\nManual checks:")
+    for item in route.manual:
+        print(f"  [MANUAL] {item}")
 
-    print("Not ready yet. Run each Fix command above, then repeat this preflight.\n")
-    return 1
+total = len(route.required)
+print(f"\nResult: {passed}/{total} required checks passed")
+if passed == total:
+    print(f"Ready to start {route.label}.")
+    print(f"Next: {route.next_command}\n")
 
+print("Not ready yet. Run each Fix command above, then repeat this preflight.\n")
 
-if __name__ == "__main__":
-    raise SystemExit(main())
