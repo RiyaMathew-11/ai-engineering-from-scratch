@@ -47,9 +47,9 @@ def call_raw_http():
         print(f"Tokens used: {result['usage']['input_tokens']} in, {result['usage']['output_tokens']} out")
 
 
-if __name__ == "__main__":
-    print("=== API Calls ===\n")
-    print("1. Using the SDK:")
-    call_with_sdk()
-    print("\n2. Using raw HTTP:")
-    call_raw_http()
+
+print("=== API Calls ===\n")
+print("1. Using the SDK:")
+call_with_sdk()
+print("\n2. Using raw HTTP:")
+call_raw_http()

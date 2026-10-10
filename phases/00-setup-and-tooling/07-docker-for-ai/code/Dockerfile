@@ -31,7 +31,7 @@ RUN python -m pip install --no-cache-dir \
     torchaudio==2.6.0+cu124 \
     --index-url https://download.pytorch.org/whl/cu124
 
-RUN python -m pip install --no-cache-dir \
+RUN python -m pip install --no-cache-dir --retries 10 --default-timeout 100 --ignore-installed blinker \
     numpy \
     pandas \
     scikit-learn \
@@ -40,7 +40,8 @@ RUN python -m pip install --no-cache-dir \
     transformers \
     datasets \
     accelerate \
-    safetensors
+    safetensors \
+    flask
 
 WORKDIR /workspace
 
